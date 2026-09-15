@@ -1,0 +1,49 @@
+name: 商品分类-按分类搜索商品
+description: >-
+  演示"提取变量 → 用于下一步请求 → 用于断言"的完整链路：
+  ① GET goods/category 获取商品分类，断言接口成功；
+  ② 用 jsonpath 提取第一个分类的 id 与名称；
+  ③ 带 category_id=${cate_id} 调 search/index，断言返回的分类名称与提取的名称一致
+     （json 断言 data.search_map_info.category.name，且 text 断言响应文本含该分类名）。
+steps:
+  # ---------- ① 获取商品分类 ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: goods/category
+
+  - response:
+      status_code: 200
+      json:
+        code: 0
+        msg: success
+
+  # ---------- ② 提取第一个分类的 id / 名称 ----------
+  - extract:
+      cate_id:
+        type: jsonpath
+        expr: $.data.category[0].id
+      cate_name:
+        type: jsonpath
+        expr: $.data.category[0].name
+
+  # ---------- ③ 用提取到的分类 id 查询，并校验分类名称 ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: search/index
+        category_id: ${cate_id}
+
+  - response:
+      status_code: 200
+      text: '*${cate_name}*'
+      json:
+        code: 0
+        msg: success
+        data:
+          search_map_info:
+            category:
+              # 与第一步提取的 cate_name 一致，说明分类 id 传参生效
+              name: ${cate_name}
