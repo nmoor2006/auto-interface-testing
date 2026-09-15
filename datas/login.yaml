@@ -1,0 +1,37 @@
+name: 登录成功-接口鉴权校验
+description: >-
+  演示同一个用例文件内多步骤串联：
+  ① 使用正确账号/密码登录，断言登录成功、且 data.body_html 为空字符串；
+  ② 不携带任何凭证访问需要登录态的 user/index，断言被服务端拒绝（code=-1000 非法访问）。
+steps:
+  # ---------- ① 正确账号密码登录 ----------
+  - request:
+      method: POST
+      url: /shop/api.php
+      params:
+        s: user/login
+      json:
+        accounts: beifan_1105
+        pwd: beifan_1105
+        type: username
+
+  - response:
+      status_code: 200
+      json:
+        code: 0
+        msg: 登录成功
+        data:
+          body_html: ''
+
+  # ---------- ② 无凭证访问受限接口，应被拒绝 ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: user/index
+
+  - response:
+      status_code: 200
+      json:
+        code: -1000
+        msg: index 非法访问
