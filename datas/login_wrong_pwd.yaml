@@ -1,0 +1,39 @@
+name: 登录失败-密码错误与密码格式校验
+description: >-
+  覆盖登录接口的两个失败分支：
+  ① 密码长度合法但内容错误 → code=-4 / 密码错误；
+  ② 密码不满足 6~18 位格式要求 → code=-1 / 密码格式 6~18 个字符。
+steps:
+  # ---------- ① 密码错误（长度合法，内容错误） ----------
+  - request:
+      method: POST
+      url: /shop/api.php
+      params:
+        s: user/login
+      json:
+        accounts: beifan_1105
+        pwd: beifan_1106
+        type: username
+
+  - response:
+      status_code: 200
+      json:
+        code: -4
+        msg: 密码错误
+
+  # ---------- ② 密码格式不合法（长度不足 6 位） ----------
+  - request:
+      method: POST
+      url: /shop/api.php
+      params:
+        s: user/login
+      json:
+        accounts: beifan_1105
+        pwd: '123'
+        type: username
+
+  - response:
+      status_code: 200
+      json:
+        code: -1
+        msg: 密码格式 6~18 个字符
