@@ -1,0 +1,51 @@
+name: 文章详情-上/下一篇联动校验
+description: >-
+  演示框架核心能力：request/response 断言 + jsonpath extract + ${var} 变量替换。
+  先请求文章详情(id=1)，提取返回中"下一篇"的 id 与 title，再请求该文章，
+  校验两次返回标题一致，证明提取的 id 真实指向下一篇文章。
+steps:
+  # ---------- 第一步：获取文章详情 id=1 ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: article/detail
+        id: 1
+
+  - response:
+      status_code: 200
+      json:
+        code: 0
+        msg: success
+        data:
+          data:
+            id: 1
+            title: 如何注册成为会员
+            article_category_name: 帮助中心
+
+  # ---------- 第二步：提取"下一篇"的信息（一次提取多个变量，验证 extract 循环） ----------
+  - extract:
+      next_id:
+        type: jsonpath
+        expr: $.data.last_next.next.id
+      next_title:
+        type: jsonpath
+        expr: $.data.last_next.next.title
+
+  # ---------- 第三步：用提取到的 id 再次请求（验证 ${var} 变量替换） ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: article/detail
+        id: ${next_id}
+
+  - response:
+      status_code: 200
+      json:
+        code: 0
+        msg: success
+        data:
+          data:
+            # 断言标题与第一步提取的 next_title 一致，即 id 确实指向同一篇文章
+            title: ${next_title}
