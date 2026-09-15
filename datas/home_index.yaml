@@ -1,0 +1,37 @@
+name: 公开接口冒烟-首页与地区数据
+description: >-
+  商城首页与地区两个公开接口的冒烟校验，同时演示框架的三种断言：
+  ① GET index/index：status_code 断言 + json 子集断言（含空数组 navigation: []）+ text 通配符断言；
+  ② GET region/index：json 断言 + text 断言响应中包含"北京市"。
+steps:
+  # ---------- ① 商城首页数据 ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: index/index
+
+  - response:
+      status_code: 200
+      # text 断言：fnmatch 通配符匹配整个响应文本
+      text: '*"banner_list"*'
+      json:
+        code: 0
+        msg: success
+        data:
+          # navigation 是空数组，可用 [] 精确断言（非空数组长度不定，不适合整体断言）
+          navigation: []
+
+  # ---------- ② 地区数据（省市列表） ----------
+  - request:
+      method: GET
+      url: /shop/api.php
+      params:
+        s: region/index
+
+  - response:
+      status_code: 200
+      text: '*北京市*'
+      json:
+        code: 0
+        msg: success
