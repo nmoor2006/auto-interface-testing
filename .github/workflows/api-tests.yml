@@ -1,0 +1,66 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:            # 支持在 Actions 页面手动触发
+  # schedule:
+  #   - cron: '0 1 * * *'       # 取消注释即可每天 09:00(北京时间) 定时跑
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 安装 Java（生成 Allure HTML 报告需要）
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 执行接口测试
+        env:
+          TEST_ENV: test          # 对应 config/env.yaml 里的环境
+        run: |
+          mkdir -p report logs
+          pytest -v --junitxml=report/junit.xml
+
+      - name: 生成 Allure 报告
+        if: always()              # 测试失败也生成报告
+        run: |
+          npm install -g allure-commandline --silent
+          allure generate report/allure-results -o report/allure-report --clean
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            report/allure-results
+            report/allure-report
+            report/junit.xml
+            logs/pytest.log
+          retention-days: 14
