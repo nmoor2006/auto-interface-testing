@@ -227,7 +227,6 @@ pytest
 - 新增关键字：`db`（数据库校验）、`script`（自定义脚本）、`sleep`（等待）
 - 用例内数据驱动：一份 YAML 支持多组参数
 - 前置/后置操作、用例间依赖与执行顺序控制
-- CI 集成：GitHub Actions 执行 pytest 并归档 Allure 报告
 - 断言增强：正则匹配、JSON Schema 校验、数组"包含"断言
 - 与接口文档（Swagger/YApi）打通，自动生成 YAML 用例模板
 
